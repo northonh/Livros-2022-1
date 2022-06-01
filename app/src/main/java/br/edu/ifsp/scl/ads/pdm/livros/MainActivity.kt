@@ -1,5 +1,6 @@
 package br.edu.ifsp.scl.ads.pdm.livros
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.view.ContextMenu
@@ -10,10 +11,14 @@ import android.widget.AdapterView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import br.edu.ifsp.scl.ads.pdm.livros.adapter.LivrosAdapter
+import br.edu.ifsp.scl.ads.pdm.livros.controller.LivroController
 import br.edu.ifsp.scl.ads.pdm.livros.databinding.ActivityMainBinding
 import br.edu.ifsp.scl.ads.pdm.livros.model.Livro
+import br.edu.ifsp.scl.ads.pdm.livros.model.LivroDao
+import br.edu.ifsp.scl.ads.pdm.livros.model.LivroSqlite
 
 class MainActivity : AppCompatActivity() {
     companion object Extras {
@@ -38,15 +43,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var livroActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editarLivroActivityResultLauncher: ActivityResultLauncher<Intent>
 
+    // Referência para o controller
+    private lateinit var livroController: LivroController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(activityMainBinding.root)
+
+        // Instanciando o controller
+        livroController = LivroController(this)
 
         // Associar o ListView com o menu de contexto
         registerForContextMenu(activityMainBinding.livrosLv)
 
         // Inicializando lista de livros
-        inicializarLivrosList()
+        livroController.buscarLivros().forEach { livro ->
+            livrosList.add(livro)
+        }
 
         // Associando Adapter ao ListView
         livrosAdapter = LivrosAdapter(this, R.layout.layout_livro, livrosList)
@@ -55,10 +68,12 @@ class MainActivity : AppCompatActivity() {
         // Registrando função callback para retorno de Activity
         livroActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultado ->
             if (resultado.resultCode == RESULT_OK) {
-                resultado.data?.getParcelableExtra<Livro>(EXTRA_LIVRO)?.apply {
-                    livrosList.add(this)
-                    //livrosAdapter.add(this.toString())
+                val livro = resultado.data?.getParcelableExtra<Livro>(EXTRA_LIVRO)
+                if (livro != null) {
+                    livrosList.add(livro)
                     livrosAdapter.notifyDataSetChanged()
+                    // Inserir novo livro no banco de dados
+                    livroController.inserirLivro(livro)
                 }
             }
         }
@@ -69,6 +84,8 @@ class MainActivity : AppCompatActivity() {
                     if (posicao != null && posicao != -1) {
                         livrosList[posicao] = this
                         livrosAdapter.notifyDataSetChanged()
+                        // atualizando livro no banco
+                        livroController.modificarLivro(this)
                     }
                 }
             }
@@ -100,21 +117,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun inicializarLivrosList() {
-        for (indice in 1..10) {
-            livrosList.add(
-                Livro(
-                    "Titulo ${indice}",
-                    "ISBN ${indice}",
-                    "Autor ${indice}",
-                    "Editora ${indice}",
-                    indice,
-                    indice
-                )
-            )
-        }
-    }
-
     override fun onCreateContextMenu(
         menu: ContextMenu?,
         v: View?,
@@ -127,22 +129,51 @@ class MainActivity : AppCompatActivity() {
     override fun onContextItemSelected(item: MenuItem): Boolean {
         val menuInfo = item.menuInfo as AdapterView.AdapterContextMenuInfo
         val posicao = menuInfo.position
+        val livro = livrosList[posicao]
 
         return when(item.itemId) {
             R.id.editarLivroMi -> {
-                val livro = livrosList[posicao]
                 val editarLivroIntent = Intent(this, LivroActivity::class.java)
                 editarLivroIntent.putExtra(EXTRA_LIVRO, livro)
                 editarLivroIntent.putExtra(EXTRA_POSICAO, posicao)
                 editarLivroActivityResultLauncher.launch(editarLivroIntent)
-
-                Toast.makeText(this, "Clicou em editar", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.removerLivroMi -> {
-                livrosList.removeAt(posicao)
-                livrosAdapter.notifyDataSetChanged()
-                Toast.makeText(this, "Clicou em remover", Toast.LENGTH_SHORT).show()
+/*                val adb: AlertDialog.Builder = AlertDialog.Builder(this)
+                adb.setTitle("Remoção de livro")
+                adb.setMessage("Deseja realmente remover?")
+                adb.setPositiveButton("Sim", object: DialogInterface.OnClickListener{
+                    override fun onClick(p0: DialogInterface?, p1: Int) {
+                        livrosList.removeAt(posicao)
+                        livrosAdapter.notifyDataSetChanged()
+                        livroController.apagarLivro(livro.titulo)
+                        Toast.makeText(this@MainActivity, "Livro removido", Toast.LENGTH_SHORT).show()
+                    }
+                })
+                adb.setNegativeButton("Não", object: DialogInterface.OnClickListener{
+                    override fun onClick(p0: DialogInterface?, p1: Int) {
+                        Toast.makeText(this@MainActivity, "Remoção cancelada", Toast.LENGTH_SHORT).show()
+                    }
+                })
+                val ad: AlertDialog = adb.create()
+                ad.show()*/
+
+
+                with(AlertDialog.Builder(this)) {
+                    setTitle("Remoção de livro")
+                    setMessage("Deseja realmente remover?")
+                    setPositiveButton("Sim") { _, _ ->
+                        livrosList.removeAt(posicao)
+                        livrosAdapter.notifyDataSetChanged()
+                        livroController.apagarLivro(livro.titulo)
+                        Toast.makeText(this@MainActivity, "Livro removido", Toast.LENGTH_SHORT).show()
+                    }
+                    setNegativeButton("Não") { _, _ ->
+                        Toast.makeText(this@MainActivity, "Remoção cancelada", Toast.LENGTH_SHORT).show()
+                    }
+                    create()
+                }.show()
                 true
             }
             else -> { false }

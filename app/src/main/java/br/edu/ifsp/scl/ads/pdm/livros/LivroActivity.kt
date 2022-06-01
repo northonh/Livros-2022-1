@@ -23,6 +23,7 @@ class LivroActivity : AppCompatActivity() {
         val posicao: Int? = intent.getIntExtra(EXTRA_POSICAO, -1)
         if (livro != null) {
             with(activityLivroBinding) {
+                tituloEt.isEnabled = false
                 tituloEt.setText(livro.titulo)
                 isbnEt.setText(livro.isbn)
                 primeiroAutorEt.setText(livro.primeiroAutor)
@@ -32,7 +33,6 @@ class LivroActivity : AppCompatActivity() {
             }
             if (posicao == -1) {
                 with( activityLivroBinding) {
-                    tituloEt.isEnabled = false
                     isbnEt.isEnabled = false
                     primeiroAutorEt.isEnabled = false
                     editoraEt.isEnabled = false

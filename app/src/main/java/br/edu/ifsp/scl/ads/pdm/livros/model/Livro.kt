@@ -6,10 +6,10 @@ import kotlinx.parcelize.Parcelize // Novo kotlin-parcelize
 
 @Parcelize
 data class Livro(
-    val titulo: String,
-    val isbn: String,
-    val primeiroAutor: String,
-    val editora: String,
-    val edicao: Int,
-    val paginas: Int
+    val titulo: String = "",
+    val isbn: String = "",
+    val primeiroAutor: String = "",
+    val editora: String = "",
+    val edicao: Int = 0,
+    val paginas: Int = 0
 ) : Parcelable

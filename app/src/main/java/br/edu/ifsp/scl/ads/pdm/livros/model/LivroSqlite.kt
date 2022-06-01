@@ -58,18 +58,83 @@ class LivroSqlite(contexto: Context): LivroDao {
     }
 
     override fun recuperarLivro(titulo: String): Livro {
-        TODO("Not yet implemented")
+        // Consulta usando um query
+        val livroCursor = livrosBd.query(
+            true, // distinct
+            TABELA_LIVRO, // tabela
+            null, // todas as colunas
+            "${COLUNA_TITULO} = ?", // where
+            arrayOf(titulo),  // valores do where
+            null, // groupBy
+            null, // having
+            null, // orderBy
+            null // limit
+        )
+
+        // retorno o livro encontrado ou vazio
+        return if (livroCursor.moveToFirst()) {
+            with (livroCursor) {
+                Livro (
+                    getString(getColumnIndexOrThrow(COLUNA_TITULO)),
+                    getString(getColumnIndexOrThrow(COLUNA_ISBN)),
+                    getString(getColumnIndexOrThrow(COLUNA_PRIMEIRO_AUTOR)),
+                    getString(getColumnIndexOrThrow(COLUNA_EDITORA)),
+                    getInt(getColumnIndexOrThrow(COLUNA_EDICAO)),
+                    getInt(getColumnIndexOrThrow(COLUNA_PAGINAS))
+                )
+            }
+        }
+        else {
+            Livro()
+        }
     }
 
     override fun recuperarLivros(): MutableList<Livro> {
-        TODO("Not yet implemented")
+        val livrosList = mutableListOf<Livro>()
+
+        val consultaQuery = "SELECT * FROM ${TABELA_LIVRO};"
+        val livrosCursor = livrosBd.rawQuery(consultaQuery, null)
+
+        while (livrosCursor.moveToNext()) {
+            with (livrosCursor) {
+                livrosList.add(
+                    Livro (
+                        getString(getColumnIndexOrThrow(COLUNA_TITULO)),
+                        getString(getColumnIndexOrThrow(COLUNA_ISBN)),
+                        getString(getColumnIndexOrThrow(COLUNA_PRIMEIRO_AUTOR)),
+                        getString(getColumnIndexOrThrow(COLUNA_EDITORA)),
+                        getInt(getColumnIndexOrThrow(COLUNA_EDICAO)),
+                        getInt(getColumnIndexOrThrow(COLUNA_PAGINAS))
+                    )
+                )
+            }
+        }
+
+        return livrosList
     }
 
     override fun atualizarLivro(livro: Livro): Int {
-        TODO("Not yet implemented")
+        val livroCv = ContentValues()
+        livroCv.put(COLUNA_TITULO, livro.titulo)
+        livroCv.put(COLUNA_ISBN, livro.isbn)
+        livroCv.put(COLUNA_PRIMEIRO_AUTOR, livro.primeiroAutor)
+        livroCv.put(COLUNA_EDITORA, livro.editora)
+        livroCv.put(COLUNA_EDICAO, livro.edicao)
+        livroCv.put(COLUNA_PAGINAS, livro.paginas)
+
+        return livrosBd.update(
+            TABELA_LIVRO,
+            livroCv,
+            "${COLUNA_TITULO} = ?",
+            arrayOf(livro.titulo)
+        )
     }
 
     override fun removerLivro(titulo: String): Int {
-        TODO("Not yet implemented")
+        return livrosBd.delete(
+            TABELA_LIVRO,
+            "${COLUNA_TITULO} = ?",
+            arrayOf(titulo)
+        )
     }
 }
