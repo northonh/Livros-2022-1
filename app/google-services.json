@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "927820556834",
+    "project_id": "livrosbackend-65682",
+    "storage_bucket": "livrosbackend-65682.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927820556834:android:00ddab18f278288d89f87b",
+        "android_client_info": {
+          "package_name": "br.edu.ifsp.scl.ads.pdm.livros"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "927820556834-2j8tr3fe7d5l7r3jdl35rkr9tsj7deqd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.edu.ifsp.scl.ads.pdm.livros",
+            "certificate_hash": "1b76be31ef95f05f43f48c201477ad6e2165f4ad"
+          }
+        },
+        {
+          "client_id": "927820556834-nrjk45p1sidbmelmugs8sslq5vmh3p6a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuUDnzgTpzvrR1t5h0cI1TIfoGL8H6Sc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "927820556834-nrjk45p1sidbmelmugs8sslq5vmh3p6a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

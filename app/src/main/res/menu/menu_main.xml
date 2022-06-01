@@ -7,4 +7,10 @@
             android:contentDescription="Adicionar livro"
             android:icon="@drawable/ic_adicionar_livro"
             app:showAsAction="ifRoom"/>
+        <item
+            android:id="@+id/atualizarLivrosMi"
+            android:title="Atualizar livros"
+            android:contentDescription="atualizar livros"
+            android:icon="@drawable/ic_atualizar_livros"
+            app:showAsAction="always"/>
 </menu>

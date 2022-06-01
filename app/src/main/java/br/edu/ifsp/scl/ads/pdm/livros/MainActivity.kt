@@ -31,38 +31,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Data source
-    private val livrosList: MutableList<Livro> = mutableListOf()
+    private val livrosList: MutableList<Livro> by lazy {
+        livroController.buscarLivros()
+    }
 
     // Adapter
-/*    private val livrosAdapter: LivrosAdapter by lazy {
+    private val livrosAdapter: LivrosAdapter by lazy {
         LivrosAdapter(this, R.layout.layout_livro, livrosList)
-    }*/
-    private lateinit var livrosAdapter: LivrosAdapter
+    }
 
     // LivroActivityResultLauncher
     private lateinit var livroActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editarLivroActivityResultLauncher: ActivityResultLauncher<Intent>
 
     // Referência para o controller
-    private lateinit var livroController: LivroController
+    private val livroController: LivroController by lazy {
+        LivroController(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(activityMainBinding.root)
 
-        // Instanciando o controller
-        livroController = LivroController(this)
-
         // Associar o ListView com o menu de contexto
         registerForContextMenu(activityMainBinding.livrosLv)
 
-        // Inicializando lista de livros
-        livroController.buscarLivros().forEach { livro ->
-            livrosList.add(livro)
-        }
-
         // Associando Adapter ao ListView
-        livrosAdapter = LivrosAdapter(this, R.layout.layout_livro, livrosList)
         activityMainBinding.livrosLv.adapter = livrosAdapter
 
         // Registrando função callback para retorno de Activity
@@ -70,10 +64,8 @@ class MainActivity : AppCompatActivity() {
             if (resultado.resultCode == RESULT_OK) {
                 val livro = resultado.data?.getParcelableExtra<Livro>(EXTRA_LIVRO)
                 if (livro != null) {
-                    livrosList.add(livro)
-                    livrosAdapter.notifyDataSetChanged()
-                    // Inserir novo livro no banco de dados
                     livroController.inserirLivro(livro)
+                    livrosAdapter.notifyDataSetChanged()
                 }
             }
         }
@@ -82,10 +74,9 @@ class MainActivity : AppCompatActivity() {
                 val posicao = resultado.data?.getIntExtra(EXTRA_POSICAO, -1)
                 resultado.data?.getParcelableExtra<Livro>(EXTRA_LIVRO)?.apply {
                     if (posicao != null && posicao != -1) {
-                        livrosList[posicao] = this
-                        livrosAdapter.notifyDataSetChanged()
                         // atualizando livro no banco
                         livroController.modificarLivro(this)
+                        livrosAdapter.notifyDataSetChanged()
                     }
                 }
             }
@@ -110,6 +101,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.adicionarLivroMi -> {
             livroActivityResultLauncher.launch(Intent(this, LivroActivity::class.java))
+            true
+        }
+        R.id.atualizarLivrosMi -> {
+            livrosAdapter.notifyDataSetChanged()
             true
         }
         else -> {
@@ -140,33 +135,12 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.removerLivroMi -> {
-/*                val adb: AlertDialog.Builder = AlertDialog.Builder(this)
-                adb.setTitle("Remoção de livro")
-                adb.setMessage("Deseja realmente remover?")
-                adb.setPositiveButton("Sim", object: DialogInterface.OnClickListener{
-                    override fun onClick(p0: DialogInterface?, p1: Int) {
-                        livrosList.removeAt(posicao)
-                        livrosAdapter.notifyDataSetChanged()
-                        livroController.apagarLivro(livro.titulo)
-                        Toast.makeText(this@MainActivity, "Livro removido", Toast.LENGTH_SHORT).show()
-                    }
-                })
-                adb.setNegativeButton("Não", object: DialogInterface.OnClickListener{
-                    override fun onClick(p0: DialogInterface?, p1: Int) {
-                        Toast.makeText(this@MainActivity, "Remoção cancelada", Toast.LENGTH_SHORT).show()
-                    }
-                })
-                val ad: AlertDialog = adb.create()
-                ad.show()*/
-
-
                 with(AlertDialog.Builder(this)) {
                     setTitle("Remoção de livro")
                     setMessage("Deseja realmente remover?")
                     setPositiveButton("Sim") { _, _ ->
-                        livrosList.removeAt(posicao)
-                        livrosAdapter.notifyDataSetChanged()
                         livroController.apagarLivro(livro.titulo)
+                        livrosAdapter.notifyDataSetChanged()
                         Toast.makeText(this@MainActivity, "Livro removido", Toast.LENGTH_SHORT).show()
                     }
                     setNegativeButton("Não") { _, _ ->
